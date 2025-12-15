@@ -1,7 +1,12 @@
 import axios from 'axios'
 
+// 使用环境变量配置后端请求地址
+// 开发环境可在 `.env.development` 中设置 VITE_API_BASE
+// 生产环境可在 `.env.production` 中设置 VITE_API_BASE
+const baseURL = import.meta.env.VITE_API_BASE || '/api'
+
 const request = axios.create({
-  baseURL: '/api',
+  baseURL,
   timeout: 10000
 })
 
