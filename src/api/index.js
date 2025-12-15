@@ -1,9 +1,9 @@
 import axios from 'axios'
 
-// 使用环境变量配置后端请求地址
-// 开发环境可在 `.env.development` 中设置 VITE_API_BASE
-// 生产环境可在 `.env.production` 中设置 VITE_API_BASE
-const baseURL = import.meta.env.VITE_API_BASE || '/api'
+// 使用环境变量配置后端请求地址（参考 dcp-vue 的写法）
+// 开发环境：.env.development 中设置 VITE_API_BASE_URL（一般为 /api）
+// 生产环境：.env.production 中设置 VITE_API_BASE_URL（一般仍为 /api，由服务器代理到真实后端）
+const baseURL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 const request = axios.create({
   baseURL,
