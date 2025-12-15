@@ -1,13 +1,8 @@
 import axios from 'axios'
 
-// 使用环境变量配置后端请求地址（兼容两种命名）
-// 优先使用：VITE_API_BASE_URL（参考 dcp-vue 的命名）
-// 其次兼容：VITE_API_BASE
-// 如果都未配置，则默认使用 '/api'
 const baseURL =
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_BASE ||
-  '/api'
+  import.meta.env.VITE_API_BASE_URL + '/api'
+
 
 const request = axios.create({
   baseURL,
