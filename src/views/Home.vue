@@ -247,6 +247,7 @@ import {
 import { mockApi, logApi, settingApi, configApi } from '@/api'
 import Logo from '@/components/Logo.vue'
 import axios from 'axios'
+import request from '@/api'
 import { reportTracking } from '@/utils/tracking'
 
 const router = useRouter()
@@ -303,7 +304,7 @@ const logsLoading = ref(false)
 const globalEnabled = ref(true)
 const mockList = ref([])
 const logList = ref([])
-const baseUrl = ref('http://localhost:3000')
+const baseUrl = ref('')
 const searchKeyword = ref('')
 
 // 分页
@@ -379,8 +380,8 @@ const loadMocks = async () => {
   loading.value = true
   try {
     // 基于项目 ID 加载 API
-    const res = await axios.get(`http://localhost:3000/api/projects/${projectId.value}/mocks`)
-    mockList.value = res.data.data
+    const res = await request.get(`/projects/${projectId.value}/mocks`)
+    mockList.value = res.data
     
     // 上报接口查询埋点
     await reportTracking('api_query', {
@@ -428,8 +429,8 @@ const loadGlobalStatus = async () => {
 // 加载基础 URL
 const loadBaseUrl = async () => {
   try {
-    const res = await axios.get('http://localhost:3000/api/config/base-url')
-    baseUrl.value = res.data.data.baseUrl
+    const res = await request.get('/config/base-url')
+    baseUrl.value = res.data.baseUrl
   } catch (error) {
     console.error('加载基础 URL 失败', error)
   }

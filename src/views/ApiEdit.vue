@@ -390,6 +390,7 @@ import {
 } from '@ant-design/icons-vue'
 import Logo from '@/components/Logo.vue'
 import axios from 'axios'
+import request from '@/api'
 import { reportTracking } from '@/utils/tracking'
 
 const router = useRouter()
@@ -400,7 +401,7 @@ const apiId = computed(() => route.params.apiId)
 const isEdit = computed(() => !!apiId.value)
 
 const saving = ref(false)
-const baseUrl = ref('http://localhost:3000')
+const baseUrl = ref('')
 const showFakerHelp = ref(false)
 
 const form = ref({
@@ -581,8 +582,8 @@ const copyToClipboard = async (text) => {
 // 加载基础 URL
 const loadBaseUrl = async () => {
   try {
-    const res = await axios.get('http://localhost:3000/api/config/base-url')
-    baseUrl.value = res.data.data.baseUrl
+    const res = await request.get('/config/base-url')
+    baseUrl.value = res.data.baseUrl
   } catch (error) {
     console.error('加载基础 URL 失败', error)
   }
@@ -593,8 +594,8 @@ const loadApiDetail = async () => {
   if (!isEdit.value) return
 
   try {
-    const res = await axios.get(`http://localhost:3000/api/mocks/${apiId.value}`)
-    const api = res.data.data
+    const res = await request.get(`/mocks/${apiId.value}`)
+    const api = res.data
 
     // 处理规则数据
     const rules = (api.rules || []).map(rule => ({
@@ -673,7 +674,7 @@ const handleSave = async () => {
   saving.value = true
   try {
     if (isEdit.value) {
-      await axios.put(`http://localhost:3000/api/mocks/${apiId.value}`, data)
+      await request.put(`/mocks/${apiId.value}`, data)
       message.success('更新成功')
       
       // 上报更新接口埋点
@@ -686,7 +687,7 @@ const handleSave = async () => {
         success: true
       })
     } else {
-      await axios.post('http://localhost:3000/api/mocks', data)
+      await request.post('/mocks', data)
       message.success('创建成功')
       
       // 上报创建接口埋点

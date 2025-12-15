@@ -177,6 +177,7 @@ import {
 } from '@ant-design/icons-vue'
 import Logo from '@/components/Logo.vue'
 import axios from 'axios'
+import request from '@/api'
 import { createVNode } from 'vue'
 import { reportTracking } from '@/utils/tracking'
 
@@ -251,10 +252,10 @@ const loadProjects = async () => {
   loading.value = true
   try {
     // 传递当前用户信息，只加载该用户的项目
-    const res = await axios.get('http://localhost:3000/api/projects', {
+    const res = await request.get('/projects', {
       params: { username: username.value }
     })
-    projectList.value = res.data.data
+    projectList.value = res.data
     
     // 上报项目查询埋点
     await reportTracking('project_query', {
@@ -318,7 +319,7 @@ const handleSave = async () => {
   try {
     if (editingId.value) {
       // 更新项目时添加当前用户信息用于权限校验
-      await axios.put(`http://localhost:3000/api/projects/${editingId.value}`, {
+      await request.put(`/projects/${editingId.value}`, {
         ...form.value,
         username: username.value
       })
@@ -332,7 +333,7 @@ const handleSave = async () => {
       })
     } else {
       // 创建项目时添加当前用户信息
-      await axios.post('http://localhost:3000/api/projects', {
+      await request.post('/projects', {
         ...form.value,
         username: username.value
       })
@@ -379,7 +380,7 @@ const handleDelete = (project) => {
     onOk: async () => {
       try {
         // 删除项目时传递当前用户信息用于权限校验
-        await axios.delete(`http://localhost:3000/api/projects/${project.id}`, {
+        await request.delete(`/projects/${project.id}`, {
           params: { username: username.value }
         })
         message.success('删除成功')
