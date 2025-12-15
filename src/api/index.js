@@ -1,8 +1,28 @@
 import axios from 'axios'
 
-const baseURL =
-  import.meta.env.VITE_API_BASE_URL + '/api'
+// 只使用你现在的 .env 写法：VITE_API_BASE_URL=http://139.196.208.166
+// 需求：
+// - 本地开发：直接请求 http://139.196.208.166/api（方便调试）
+// - 线上 https://moka.qianjisan.com：一律请求 /api，由 vercel.json 代理到后端，避免 Mixed Content
+const envBase = import.meta.env.VITE_API_BASE_URL || ''
 
+let baseURL
+
+if (typeof window !== 'undefined') {
+  const isHttps = window.location.protocol === 'https:'
+  const isProdHost = window.location.hostname === 'moka.qianjisan.com'
+
+  if (isHttps && isProdHost) {
+    // 线上环境：只用相对路径，让浏览器请求 https://moka.qianjisan.com/api/...
+    baseURL = '/api'
+  } else {
+    // 本地或其它环境：用 .env 里的完整地址
+    baseURL = envBase ? `${envBase}/api` : '/api'
+  }
+} else {
+  // SSR 或构建时兜底
+  baseURL = envBase ? `${envBase}/api` : '/api'
+}
 
 const request = axios.create({
   baseURL,
