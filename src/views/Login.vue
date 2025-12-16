@@ -113,7 +113,7 @@
         >
           <a-input
             v-model:value="registerForm.username"
-            placeholder="请输入用户名(3-20个字符)"
+            placeholder="请输入用户名(3-20位，仅字母和数字)"
             size="large"
           >
             <template #prefix>
@@ -127,7 +127,7 @@
           name="password"
           :rules="[
             { required: true, message: '请输入密码' },
-            { min: 6, message: '密码至少6个字符' }
+            { validator: validateRegisterPassword, trigger: 'blur' }
           ]"
         >
           <a-input-password
@@ -193,14 +193,19 @@
         <a-form-item
           label="安全问题2"
           name="question2"
-          :rules="[{ required: true, message: '请选择安全问题' }]"
+          :rules="[{ validator: validateQuestion2, trigger: 'change' }]"
         >
           <a-select
             v-model:value="registerForm.question2"
             placeholder="请选择安全问题"
             size="large"
           >
-            <a-select-option v-for="q in securityQuestions" :key="q" :value="q">
+            <a-select-option
+              v-for="q in securityQuestions"
+              :key="q"
+              :value="q"
+              :disabled="q === registerForm.question1"
+            >
               {{ q }}
             </a-select-option>
           </a-select>
@@ -221,14 +226,19 @@
         <a-form-item
           label="安全问题3"
           name="question3"
-          :rules="[{ required: true, message: '请选择安全问题' }]"
+          :rules="[{ validator: validateQuestion3, trigger: 'change' }]"
         >
           <a-select
             v-model:value="registerForm.question3"
             placeholder="请选择安全问题"
             size="large"
           >
-            <a-select-option v-for="q in securityQuestions" :key="q" :value="q">
+            <a-select-option
+              v-for="q in securityQuestions"
+              :key="q"
+              :value="q"
+              :disabled="q === registerForm.question1 || q === registerForm.question2"
+            >
               {{ q }}
             </a-select-option>
           </a-select>
@@ -497,6 +507,11 @@ const validateUsername = async (rule, value) => {
     return Promise.reject('用户名最多20个字符')
   }
 
+  // 只允许英文字母和数字
+  if (!/^[A-Za-z0-9]+$/.test(value)) {
+    return Promise.reject('用户名只能包含英文字母和数字')
+  }
+
   // 通过接口检查用户名是否已存在
   try {
     const response = await authApi.checkUsernameExists(value)
@@ -524,10 +539,53 @@ const validateUsername = async (rule, value) => {
   }
 }
 
+// 注册密码校验：只能字母+数字，且必须大于6位，并包含字母和数字
+const validateRegisterPassword = (rule, value) => {
+  if (!value) {
+    return Promise.reject('请输入密码')
+  }
+
+  if (value.length <= 6) {
+    return Promise.reject('密码长度必须大于6位')
+  }
+
+  if (!/^[A-Za-z0-9]+$/.test(value)) {
+    return Promise.reject('密码只能包含英文字母和数字')
+  }
+
+  if (!/[A-Za-z]/.test(value) || !/\d/.test(value)) {
+    return Promise.reject('密码必须同时包含字母和数字')
+  }
+
+  return Promise.resolve()
+}
+
 // 验证确认密码
 const validateConfirmPassword = (rule, value) => {
   if (value !== registerForm.value.password) {
     return Promise.reject('两次输入的密码不一致')
+  }
+  return Promise.resolve()
+}
+
+// 验证安全问题2：必填且不能与问题1相同
+const validateQuestion2 = (rule, value) => {
+  if (!value) {
+    return Promise.reject('请选择安全问题')
+  }
+  if (value === registerForm.value.question1) {
+    return Promise.reject('安全问题2不能和安全问题1相同')
+  }
+  return Promise.resolve()
+}
+
+// 验证安全问题3：必填且不能与问题1、2相同
+const validateQuestion3 = (rule, value) => {
+  if (!value) {
+    return Promise.reject('请选择安全问题')
+  }
+  if (value === registerForm.value.question1 || value === registerForm.value.question2) {
+    return Promise.reject('安全问题3不能和前两个问题相同')
   }
   return Promise.resolve()
 }
