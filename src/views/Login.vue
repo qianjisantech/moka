@@ -119,6 +119,12 @@
             <template #prefix>
               <UserOutlined />
             </template>
+            <template #suffix>
+              <CheckCircleOutlined
+                v-if="usernameCheck.checkedUsername === registerForm.username && usernameCheck.available"
+                style="color: #52c41a;"
+              />
+            </template>
           </a-input>
         </a-form-item>
 
@@ -438,7 +444,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
+import { UserOutlined, LockOutlined, CheckCircleOutlined } from '@ant-design/icons-vue'
 import Logo from '@/components/Logo.vue'
 import { authApi } from '@/api'
 import { reportTracking } from '@/utils/tracking'
@@ -493,6 +499,12 @@ const securityQuestions = [
   '你最喜欢的电影是什么？'
 ]
 
+// 用户名唯一性校验状态：记录已校验通过的用户名，避免重复请求
+const usernameCheck = ref({
+  checkedUsername: '',
+  available: false
+})
+
 // 验证用户名唯一性
 const validateUsername = async (rule, value) => {
   if (!value) {
@@ -512,29 +524,44 @@ const validateUsername = async (rule, value) => {
     return Promise.reject('用户名只能包含英文字母和数字')
   }
 
+  // 如果当前输入和上次已校验通过的一样，直接通过，不再请求接口
+  if (usernameCheck.value.checkedUsername === value && usernameCheck.value.available) {
+    return Promise.resolve()
+  }
+
   // 通过接口检查用户名是否已存在
   try {
     const response = await authApi.checkUsernameExists(value)
     
-    // 如果接口返回 code === 0，检查 data 中的 exists 字段
-    // 后端可能返回两种格式：
-    // 1. { code: 0, data: { exists: false } } - 用户名可用
-    // 2. { code: 0, data: { exists: true } } - 用户名已存在
     if (response.data) {
       if (response.data.exists === true) {
+        usernameCheck.value = {
+          checkedUsername: value,
+          available: false
+        }
         return Promise.reject('用户名已存在')
       }
       if (response.data.exists === false) {
+        usernameCheck.value = {
+          checkedUsername: value,
+          available: true
+        }
         return Promise.resolve()
       }
     }
     
     // 如果接口成功返回但没有 exists 字段，默认认为可用
+    usernameCheck.value = {
+      checkedUsername: value,
+      available: true
+    }
     return Promise.resolve()
   } catch (error) {
-    // 如果接口返回错误（code !== 0），说明用户名已存在或其他错误
-    // 响应拦截器会将 code !== 0 的情况抛出错误
     const errorMessage = error.message || '用户名已存在'
+    usernameCheck.value = {
+      checkedUsername: value,
+      available: false
+    }
     return Promise.reject(errorMessage)
   }
 }
